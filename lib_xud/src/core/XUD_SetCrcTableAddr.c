@@ -4,6 +4,7 @@
   * @author    Ross Owen, XMOS Limited
   */
 
+#include <string.h>
 
 /* Global table used to store complete valid CRC5 table */
 extern unsigned char crc5Table[2048];
