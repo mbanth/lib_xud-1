@@ -323,6 +323,7 @@ XUD_LineState_t XUD_HAL_GetLineState(/*XUD_HAL_t &xudHal*/)
     if(se0)
         return XUD_LINESTATE_SE0;
 
+    return XUD_LINESTATE_SE1;
 #endif
 }
 
@@ -358,6 +359,7 @@ unsigned XUD_HAL_WaitForLineStateChange(XUD_LineState_t &currentLs, unsigned tim
     return 0;
 #else
     #warning TODO for XS2A
+    return 0;
 #endif
 }
 
