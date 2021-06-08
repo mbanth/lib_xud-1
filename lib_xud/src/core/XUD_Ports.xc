@@ -23,7 +23,8 @@ on USB_TILE: clock rx_usb_clk  = XS1_CLKBLK_4;
 #else
 in port flag0_port = PORT_USB_FLAG0;
 in port flag1_port = PORT_USB_FLAG1;
-in port flag2_port = PORT_USB_FLAG2;
+// TODO: re-instate the line below once the conflict with PORT_I2S_DAC0 in sw_xvf3600 is fixed
+// in port flag2_port = PORT_USB_FLAG2;
 
 //#if (XUD_SERIES_SUPPORT == XUD_U_SERIES)
 #if defined(ARCH_S) || defined(ARCH_X200)
