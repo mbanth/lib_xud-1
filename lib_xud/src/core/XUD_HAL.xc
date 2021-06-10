@@ -45,7 +45,7 @@ unsigned XtlSelFromMhz(unsigned m)
             break;
     }
 
-    return UINT_MAX; // Passify the compiler warning
+    return 0b000;
 }
 #endif
 
@@ -379,7 +379,7 @@ unsigned XUD_HAL_WaitForLineStateChange(XUD_LineState_t &currentLs, unsigned tim
     return 0;
 #else
     #warning TODO for XS2A
-    return 0;
+    return 1;
 #endif
 }
 
