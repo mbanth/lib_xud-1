@@ -1,25 +1,28 @@
 #!/usr/bin/env python
 # Copyright 2016-2021 XMOS LIMITED.
 # This Software is subject to the terms of the XMOS Public Licence: Version 1.
+
+# Directed test for (github) issue #58
 from usb_packet import *
+import usb_packet
 from helpers import do_usb_test, RunUsbTest
 from usb_session import UsbSession
 from usb_transaction import UsbTransaction
 
-# Tests out of seq (but valid.. ) data PID
+
 def do_test(arch, clk, phy, usb_speed, seed, verbose=False):
 
     address = 1
-    ep = 1
+    pktLength = 10
 
     session = UsbSession(
         bus_speed=usb_speed, run_enumeration=False, device_address=address
     )
 
-    # The large inter-frame gap is to give the DUT time to print its output
-    interEventDelay = 500
+    ep_ctrl = 2
+    ep = 1
 
-    # Valid OUT transaction
+    # Expect test EP's to be halted
     session.add_event(
         UsbTransaction(
             session,
@@ -27,26 +30,11 @@ def do_test(arch, clk, phy, usb_speed, seed, verbose=False):
             endpointNumber=ep,
             endpointType="BULK",
             direction="OUT",
-            dataLength=10,
-            interEventDelay=interEventDelay,
-        )
-    )
-
-    # Pretend the ACK went missing on the way to host. Re-send same packet. xCORE should ACK but throw pkt away
-    session.add_event(
-        UsbTransaction(
-            session,
-            deviceAddress=address,
-            endpointNumber=ep,
-            endpointType="BULK",
-            direction="OUT",
-            dataLength=11,
-            interEventDelay=interEventDelay,
-            resend=True,
+            dataLength=pktLength,
+            halted=True,
         )
     )
 
-    # Send some valid OUT transactions
     session.add_event(
         UsbTransaction(
             session,
@@ -54,21 +42,47 @@ def do_test(arch, clk, phy, usb_speed, seed, verbose=False):
             endpointNumber=ep,
             endpointType="BULK",
             direction="OUT",
-            dataLength=12,
-            interEventDelay=interEventDelay,
+            dataLength=pktLength,
+            halted=True,
         )
     )
+
     session.add_event(
         UsbTransaction(
             session,
             deviceAddress=address,
             endpointNumber=ep,
             endpointType="BULK",
-            direction="OUT",
-            dataLength=13,
-            interEventDelay=interEventDelay,
+            direction="IN",
+            halted=True,
         )
     )
+
+    session.add_event(
+        UsbTransaction(
+            session,
+            deviceAddress=address,
+            endpointNumber=ep,
+            endpointType="BULK",
+            direction="IN",
+            halted=True,
+        )
+    )
+
+    # Inform DUT to un halt EP's
+    session.add_event(
+        UsbTransaction(
+            session,
+            deviceAddress=address,
+            endpointNumber=ep_ctrl,
+            endpointType="BULK",
+            direction="OUT",
+            dataLength=pktLength,
+        )
+    )
+
+    # Expect normal transactions
+    # DUT will exit after one normal transaction per EP.
     session.add_event(
         UsbTransaction(
             session,
@@ -76,8 +90,18 @@ def do_test(arch, clk, phy, usb_speed, seed, verbose=False):
             endpointNumber=ep,
             endpointType="BULK",
             direction="OUT",
-            dataLength=14,
-            interEventDelay=interEventDelay,
+            dataLength=pktLength,
+        )
+    )
+
+    session.add_event(
+        UsbTransaction(
+            session,
+            deviceAddress=address,
+            endpointNumber=ep,
+            endpointType="BULK",
+            direction="IN",
+            dataLength=pktLength,
         )
     )
 
@@ -95,6 +119,6 @@ def do_test(arch, clk, phy, usb_speed, seed, verbose=False):
     )
 
 
-def test_bulk_rx_basic_badpid():
+def test_stall_epready():
     for result in RunUsbTest(do_test):
         assert result

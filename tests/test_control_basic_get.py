@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # Copyright 2016-2021 XMOS LIMITED.
 # This Software is subject to the terms of the XMOS Public Licence: Version 1.
-import xmostest
 from usb_packet import (
     TokenPacket,
     TxDataPacket,
@@ -19,6 +18,7 @@ def do_test(arch, clk, phy, usb_speed, seed, verbose=False):
 
     ep = 0
     address = 1
+    ied = 500
 
     session = UsbSession(
         bus_speed=usb_speed, run_enumeration=False, device_address=address
@@ -61,17 +61,13 @@ def do_test(arch, clk, phy, usb_speed, seed, verbose=False):
     # Send 0 length OUT transaction
     session.add_event(
         TokenPacket(
-            pid=USB_PID["OUT"],
-            address=address,
-            endpoint=ep,
+            pid=USB_PID["OUT"], address=address, endpoint=ep, interEventDelay=ied
         )
     )
-    session.add_event(
-        TxDataPacket(length=0, pid=USB_PID["DATA1"])
-    )
+    session.add_event(TxDataPacket(length=0, pid=USB_PID["DATA1"]))
     session.add_event(RxHandshakePacket())
 
-    do_usb_test(
+    return do_usb_test(
         arch,
         clk,
         phy,
@@ -84,5 +80,6 @@ def do_test(arch, clk, phy, usb_speed, seed, verbose=False):
     )
 
 
-def runtest():
-    RunUsbTest(do_test)
+def test_control_basic_get():
+    for result in RunUsbTest(do_test):
+        assert result
