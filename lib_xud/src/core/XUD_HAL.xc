@@ -14,7 +14,6 @@ extern in port flag1_port;
 extern in port flag2_port;
 extern buffered in port:32 p_usb_clk;
 #else
-#include <limits.h>
 extern in port flag0_port; /* For XS3: RXA  or DP */
 extern in port flag1_port; /* For XS3: RXE  or DM */
 extern buffered in port:32 p_usb_clk;
